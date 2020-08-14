@@ -1,0 +1,34 @@
+<html>
+	<head>
+		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	</head>
+	<body>
+		<h1>The ID Game</h1>
+		<div id="room-data" class="container">
+			<template v-if="inRoom">
+				<span>You are in room: {{ roomId }}</span>
+				<span>Other people in this room: {{ roomMembers }}</span>
+			</template>
+			<template v-else>
+				<div class="join-room">
+					<label for="join-room">Join an existing room</label>
+					<input type="text" id="join-room" placeholder="Enter a room code">
+					<button onclick="joinRoom()" >Join</button>
+				</div>
+				<div class="create-room">
+					<label for="create-room">Or create a new room</label>
+					<button id="create-room" onclick="createRoom()">Create</button>
+				</div>
+			</template>
+		</div>
+			
+
+		<div class="container">
+			<div id="character-creation">
+				{{ userId }}
+			</div>
+		</div>
+		<script src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript" src="index.js"></script>
+	</body>
+</html>

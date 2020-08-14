@@ -1,0 +1,15 @@
+{
+  "name": "id_game",
+  "version": "1.0.0",
+  "description": "A social game of romantic story telling",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dylan Emery",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  }
+}

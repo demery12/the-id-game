@@ -1,0 +1,3 @@
+* send packs based on room to instruct what to draw
+* create player object to store name and profile
+* draw form if player has not yet filled out their info
