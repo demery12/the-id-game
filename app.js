@@ -16,43 +16,40 @@ const Player = require('./game_classes/Player');
 
 const DEBUG = true;
 
-const CONNECTIONS = {}; // { socketId: {socket: socket, player: Player}}
-const PLAYERS = {};
-const ROOMS = {} // { roomId: {socketId: socketId} }
+const PLAYERS = {}; // { playerId : Player}
+const SOCKETS = {}
+const ROOMS = {}; // { roomId: Room }
 
 const io = require('socket.io')(serv, {});
 
 io.sockets.on('connection', function (socket) {
-    socket.id = Math.random();
-    console.log(`New connection: ${socket.id}`);
-    CONNECTIONS[socket.id] = { socket };
-    const player = new Player();
+    const player = new Player(socket);
     PLAYERS[player.playerId] = player;
-    CONNECTIONS[socket.id]['player'] = player;
-    player.socketId = socket.id;
-    socket.emit('userIdAssignment', { userId: socket.id });
+    SOCKETS[player.playerId] = socket;
+    socket.emit('userIdAssignment', { userId: player.playerId });
 
     socket.on('disconnect', function () {
-        if ("room" in CONNECTIONS[socket.id]) {
-            const roomId = CONNECTIONS[socket.id]["room"];
-            const privilege = ROOMS[roomId][socket.id];
-            delete ROOMS[roomId][socket.id];
-            const remainingPlayers = Object.keys(ROOMS[roomId]);
+        const roomId = player.roomId;
+        if (roomId) {
+            ROOMS[roomId].removeMember(player);
+            const remainingPlayers = ROOMS[roomId].getMembers();
             if (remainingPlayers.length === 0) {
                 delete ROOMS[roomId];
             }
         }
-        delete CONNECTIONS[socket.id];
+        delete SOCKETS[player.playerId];
+        delete PLAYERS[player.playerId];
         console.log(ROOMS);
     });
 
-    function joinRoom(socketId, roomId) {
-        CONNECTIONS[socketId]["room"] = roomId;
-        ROOMS[roomId][socketId] = player;
-        player.room = roomId;
+    /* Room must exist in ROOMS */
+    function joinRoom(roomId) {
+        player.roomId = roomId;
+        ROOMS[roomId].addMember(player);
+        console.log(ROOMS[roomId].getMembers());
         socket.emit('roomJoined', {
             roomId,
-            members: Object.keys(ROOMS[roomId])
+            members: ROOMS[roomId].getMembers()
         });
     }
     // Room Creation
@@ -60,15 +57,15 @@ io.sockets.on('connection', function (socket) {
         const room = new Room();
         const roomId = room.roomId;
         ROOMS[roomId] = room;
-        joinRoom(socket.id, roomId);
-        console.log(`A new room was created by ${socket.id}`)
+        joinRoom(roomId);
+        console.log(`A new room was created by ${player.playerId}`)
     });
 
     // Room Joining
     socket.on('joinRoom', (data) => {
         const roomId = data.roomId;
         if (roomId in ROOMS) {
-            joinRoom(socket.id, roomId);
+            joinRoom(roomId);
         }
         else {
             socket.emit('joinRoomFailed');
@@ -87,7 +84,7 @@ io.sockets.on('connection', function (socket) {
     socket.on('sendMsgToServer', (data) => {
         console.log('Got a message');
         console.log(data);
-        const playerName = player.displayName || player.socketId;
+        const playerName = player.displayName || player.playerId;
         const msg = data.msg;
         const roomId = data.roomId;
         sendToRoom(roomId, "addToChat", { msg, playerName })
@@ -103,9 +100,9 @@ io.sockets.on('connection', function (socket) {
 
 function sendToRoom(roomId, emitMessage, data) {
     if (roomId in ROOMS) {
-        const members = Object.keys(ROOMS[roomId]);
-        for (const socketId of members) {
-            const socket = CONNECTIONS[socketId]['socket'];
+        const members = ROOMS[roomId].getMembers();
+        for (const player of members) {
+            const socket = SOCKETS[player.playerId];
             data.members = members
             data.roomId = roomId;
             console.log(`sending ${emitMessage}`)
@@ -116,15 +113,13 @@ function sendToRoom(roomId, emitMessage, data) {
 
 setInterval(function () {
 
-    for (const socketId of Object.keys(CONNECTIONS)) {
-        const socket = CONNECTIONS[socketId]['socket'];
-        const pack = {}
-        if ('room' in CONNECTIONS[socketId]) {
-            const roomId = CONNECTIONS[socketId]['room'];
-            const members = Object.values(ROOMS[roomId]);
-            socket.emit("update", { roomId, members, socketId })
+    for (const playerId of Object.keys(PLAYERS)) {
+        const player = PLAYERS[playerId];
+        const socket = SOCKETS[playerId];
+        if (player.inRoom()) {
+            const roomId = player.roomId;
+            const members = ROOMS[roomId].getMembers();
+            socket.emit("update", { roomId, members })
         }
-        // next step is emit packs to room members with who is in the room
-
     }
 }, 1000);
