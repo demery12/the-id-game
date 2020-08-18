@@ -1,13 +1,15 @@
 <html>
 	<head>
 		<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+		<link rel="stylesheet" href="index.css">
 	</head>
 	<body>
 		<h1>The ID Game</h1>
 		<div id="room-data" class="container">
 			<template v-if="inRoom">
 				<span>You are in room: {{ roomId }}</span>
-				<span>Other people in this room: {{ roomMembers }}</span>
+				<span>Other people in this room: {{ displayMembers }}</span>
+				<chat-component></chat-component>
 			</template>
 			<template v-else>
 				<div class="join-room">
@@ -21,11 +23,24 @@
 				</div>
 			</template>
 		</div>
-			
+		
 
 		<div class="container">
 			<div id="character-creation">
-				{{ userId }}
+				<h3>Create Your Game Profile</h3>
+				<span>Your user id is {{ userId }} (that is a lucky one)</span>
+				<br>
+				<br>
+				<label for="first-name">First Name: </label>
+				<input v-model="firstName" type="text" id="first-name">
+				<br>
+				<label for="last-name">Last Name: </label>
+				<input v-model="lastName" type="text" id="last-name">
+				<br>
+				<label for="display-name">Display Name:</label>
+				<input v-model="displayName" type="text" id="display-name">
+				<br>
+				<button onclick="updateProfile()">Update</button>
 			</div>
 		</div>
 		<script src="/socket.io/socket.io.js"></script>
