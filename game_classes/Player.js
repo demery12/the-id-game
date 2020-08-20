@@ -1,7 +1,7 @@
 class Player {
     constructor() {
         this.playerId = Math.random();
-        this.displayName;
+        this.displayName = null;
         this.firstName = "";
         this.lastName = "";
         this.roomId = null;

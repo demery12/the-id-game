@@ -9,7 +9,7 @@
 			<template v-if="inRoom">
 				<span>You are in room: {{ roomId }}</span>
 				<span>Other people in this room: {{ displayMembers }}</span>
-				<chat-component></chat-component>
+				<chat-component v-bind:messages="messages"></chat-component>
 			</template>
 			<template v-else>
 				<div class="join-room">

@@ -24,10 +24,11 @@ function joinRoom() {
 }
 
 function joinedRoom(data) {
-	roomData.roomId = data.roomId;
-	roomData.roomMembers = data.members;
-	roomData.displayMembers = data.members.map(member => member.displayName || member.socketId)
-	roomData.inRoom = true;
+	room.roomId = data.roomId;
+	room.roomMembers = data.members;
+	room.displayMembers = data.members.map(member => member.displayName || member.playerId)
+	room.inRoom = true;
+	room.messages = data.messages;
 }
 
 socket.on('roomJoined', (data) => {
@@ -49,13 +50,14 @@ function updateProfile() {
 }
 // Trying to bind the chat input into this vue
 
-var chat = Vue.component('chat-component', {
+var ChatComponent = {
 	data: function () {
 		return {
-			messages: [{ id: 0, sender: "Room", text: "Hello" }],
+			// messages: [{ id: 0, sender: "Room", text: "Hello" }],
 			chatInput: ""
 		}
 	},
+	props: ['messages'],
 	template: `<div id="chat-container" class = "container">
 				<div id="chat-text" style="width:500px; height:100px; overflow-y:scroll" >
 					<div v-for="message in messages" :key="message.id">{{message.sender}}: {{ message.text }}</div>
@@ -72,7 +74,7 @@ var chat = Vue.component('chat-component', {
 			else {
 				socket.emit('sendMsgToServer', {
 					msg: this.chatInput,
-					roomId: roomData.roomId
+					roomId: room.roomId
 				});
             }
 			this.chatInput = '';
@@ -94,16 +96,21 @@ var chat = Vue.component('chat-component', {
 			messageId += 1;
 		});
     }
-});
-var roomData = new Vue({
+};
+var room = new Vue({
 	el: "#room-data",
+	components: {
+		'chat-component': ChatComponent
+	},
 	data: {
 		inRoom: false,
 		roomId: 0,
 		roomMembers: [],
-		displayMembers: []
-    }
-})
+		displayMembers: [],
+		messages: [{ id: 0, sender: "Room", text: "Hello" }]
+	}
+});
+
 var characterCreation = new Vue({
 	el: "#character-creation",
 	data: {
@@ -132,7 +139,7 @@ var chat = new Vue({
 			else
 				socket.emit('sendMsgToServer', {
 					msg: chatInput.value,
-					roomId: roomData.roomId
+					roomId: room.roomId
 				});
 			data.chatInput = '';
         }

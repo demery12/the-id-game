@@ -87,6 +87,9 @@ io.sockets.on('connection', function (socket) {
         const playerName = player.displayName || player.playerId;
         const msg = data.msg;
         const roomId = data.roomId;
+        if (roomId in ROOMS) {
+            ROOMS[roomId].addMessage(playerName, msg);
+        }
         sendToRoom(roomId, "addToChat", { msg, playerName })
     });
 
@@ -118,8 +121,10 @@ setInterval(function () {
         const socket = SOCKETS[playerId];
         if (player.inRoom()) {
             const roomId = player.roomId;
-            const members = ROOMS[roomId].getMembers();
-            socket.emit("update", { roomId, members })
+            const room = ROOMS[roomId]
+            const members = room.getMembers();
+            const messages = room.getMessages();
+            socket.emit("update", { roomId, members, messages })
         }
     }
 }, 1000);

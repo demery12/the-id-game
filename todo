@@ -1,3 +1,2 @@
-* send packs based on room to instruct what to draw
-* create player object to store name and profile
-* draw form if player has not yet filled out their info
+* correct user flow (make profile -> create or join room -> game room)
+* store message on server to send to room when a player joins
