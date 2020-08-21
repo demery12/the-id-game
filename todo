@@ -1,2 +1,7 @@
-* correct user flow (make profile -> create or join room -> game room)
-* store message on server to send to room when a player joins
+* working on the actual game portion of it
+	* who manages the assignments? A new game object?
+	* who manages the round?
+	* currently the game component is expecting more data from gameUpdate than is being provided
+* chat update should happen regardless of whether game update happens
+* once a game starts the players should be solidified and NOT removed from everything if they dc
+	* a player should be able to rejoin after DC if they save their playerId

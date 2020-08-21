@@ -99,6 +99,16 @@ io.sockets.on('connection', function (socket) {
         const res = eval(data);
         socket.emit('evalAnswer', res);
     });
+
+    socket.on('startGame', function () {
+        const room = ROOMS[player.roomId];
+        room.gameStarted = true;
+        room.assignIds();
+    });
+
+    socket.on('nextPlayer', function () {
+
+    });
 });
 
 function sendToRoom(roomId, emitMessage, data) {
@@ -115,7 +125,6 @@ function sendToRoom(roomId, emitMessage, data) {
 }
 
 setInterval(function () {
-
     for (const playerId of Object.keys(PLAYERS)) {
         const player = PLAYERS[playerId];
         const socket = SOCKETS[playerId];
@@ -124,7 +133,13 @@ setInterval(function () {
             const room = ROOMS[roomId]
             const members = room.getMembers();
             const messages = room.getMessages();
-            socket.emit("update", { roomId, members, messages })
+            if (room.gameStarted) {
+                const assignments = room.assignments;
+                const playerAssignment = assignments[playerId];
+                socket.emit('gameUpdate', { roomId, members, messages, playerAssignment })
+            } else {
+                socket.emit("update", { roomId, members, messages })
+            }
         }
     }
 }, 1000);

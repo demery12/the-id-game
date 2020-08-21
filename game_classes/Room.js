@@ -4,6 +4,8 @@ class Room {
         this.members = {};
         this.messages = [];
         this.message_counter = 0;
+        this.gameStarted = false;
+        this.assignments = null;
     }
 
     addMember(player) {
@@ -34,6 +36,27 @@ class Room {
 
     getMessages() {
         return this.messages;
+    }
+
+    assignIds() {
+        const players = this.getMemberIds();
+        players.push(...players);
+        const assignments = {};
+        for (const memberId of this.getMemberIds()) {
+            assignments[memberId] = [];
+        }
+        for (const player of Object.keys(assignments)) {
+            let newAssignmentIndex = Math.floor(Math.random() * players.length);
+            let newAssignment = players[newAssignmentIndex];
+            assignments[player].push(newAssignment);
+            players.splice(newAssignmentIndex, 1);
+
+            newAssignmentIndex = Math.floor(Math.random() * players.length);
+            newAssignment = players[newAssignmentIndex];
+            assignments[player].push(newAssignment);
+            players.splice(newAssignmentIndex, 1);
+        } 
+        this.assignments = assignments;
     }
 }
 

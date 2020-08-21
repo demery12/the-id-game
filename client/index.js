@@ -1,54 +1,6 @@
 // Requires socket.io, which is included in the html
 
 const socket = io()
-// adding room creation
-
-socket.on('userIdAssignment', (data) => {
-	characterCreation.userId = data.userId;
-});
-
-function createRoom() {
-	socket.emit('createRoom');
-}
-
-socket.on('roomCreated', (data) => {
-	console.log(`A room was created with roomId: ${data.roomId}`)
-	joinedRoom(data);
-});
-
-function joinRoom() {
-	const roomId = document.getElementById("join-room").value;
-	console.log(roomId);
-	socket.emit('joinRoom', { roomId });
-
-}
-
-function joinedRoom(data) {
-	room.roomId = data.roomId;
-	room.roomMembers = data.members;
-	room.displayMembers = data.members.map(member => member.displayName || member.playerId)
-	room.inRoom = true;
-	room.messages = data.messages;
-}
-
-socket.on('roomJoined', (data) => {
-	console.log(data);
-	joinedRoom(data);
-});
-
-socket.on('update', (data) => {
-	joinedRoom(data);
-});
-
-function updateProfile() {
-	socket.emit('profileUpdate', {
-		firstName: characterCreation.firstName,
-		lastName: characterCreation.lastName,
-		displayName: characterCreation.displayName
-
-    })
-}
-// Trying to bind the chat input into this vue
 
 var ChatComponent = {
 	data: function () {
@@ -57,7 +9,7 @@ var ChatComponent = {
 			chatInput: ""
 		}
 	},
-	props: ['messages'],
+	props: ['messages', 'roomId'],
 	template: `<div id="chat-container" class = "container">
 				<div id="chat-text" style="width:500px; height:100px; overflow-y:scroll" >
 					<div v-for="message in messages" :key="message.id">{{message.sender}}: {{ message.text }}</div>
@@ -74,7 +26,7 @@ var ChatComponent = {
 			else {
 				socket.emit('sendMsgToServer', {
 					msg: this.chatInput,
-					roomId: room.roomId
+					roomId: this.roomId
 				});
             }
 			this.chatInput = '';
@@ -97,60 +49,153 @@ var ChatComponent = {
 		});
     }
 };
-var room = new Vue({
-	el: "#room-data",
+var roomComponent = {
 	components: {
 		'chat-component': ChatComponent
 	},
-	data: {
-		inRoom: false,
-		roomId: 0,
-		roomMembers: [],
-		displayMembers: [],
-		messages: [{ id: 0, sender: "Room", text: "Hello" }]
-	}
-});
+	data: function () {
+		return {
+			inRoom: false,
+			roomId: 0,
+			roomMembers: [],
+			displayMembers: [],
+			messages: [{ id: 0, sender: "Room", text: "Hello" }]
+        }
+	},
+	template:`<div id="room-data" class="container">
+				<template v-if="inRoom">
+					<span>You are in room: {{ roomId }}</span>
+					<span>Other people in this room: {{ displayMembers }}</span>
+					<chat-component v-bind:messages="messages" v-bind:roomId="roomId"></chat-component>
+				</template>
+				<template v-else>
+					<div class="join-room">
+						<label for="join-room">Join an existing room</label>
+						<input type="text" id="join-room" placeholder="Enter a room code">
+						<button @click="joinRoom" >Join</button>
+					</div>
+					<div class="create-room">
+						<label for="create-room">Or create a new room</label>
+						<button id="create-room" @click="createRoom">Create</button>
+					</div>
+				</template>
+			</div>`,
+	created: function () {
+		socket.on('roomJoined', (data) => {
+			console.log(data);
+			this.joinedRoom(data);
+		});
 
-var characterCreation = new Vue({
-	el: "#character-creation",
-	data: {
-		visible: true,
-		userId: 0,
-		firstName: "",
-		lastName: "",
-		displayName: ""
-    }
-})
+		socket.on('update', (data) => {
+			this.joinedRoom(data);
+		});
 
-
-
-/*
-var chat = new Vue({
-	e1: "#chat-container",
-	data: {
-		chatText: "",
-		chatInput: "",
+		socket.on('roomCreated', (data) => {
+			console.log(`A room was created with roomId: ${data.roomId}`)
+			this.joinedRoom(data);
+		});
 	},
 	methods: {
-		chatFormSubmit: function (event) {
-			console.log("ooooo")
-			if (chatInput.value[0] === '/')
-				socket.emit('evalServer', chatInput.value.slice(1));
-			else
-				socket.emit('sendMsgToServer', {
-					msg: chatInput.value,
-					roomId: room.roomId
-				});
-			data.chatInput = '';
+		joinRoom: function () {
+			const roomId = document.getElementById("join-room").value;
+			console.log(roomId);
+			socket.emit('joinRoom', { roomId });
+		},
+		joinedRoom: function(data) {
+			this.roomId = data.roomId;
+			this.roomMembers = data.members;
+			this.displayMembers = data.members.map(member => member.displayName || member.playerId)
+			this.inRoom = true;
+			this.messages = data.messages;
+		},
+		createRoom: function() {
+			socket.emit('createRoom');
+		}
+    }
+};
+
+var profileCreation = {
+	data: function () {
+		return {
+			userId: 0,
+			firstName: "",
+			lastName: "",
+			displayName: ""
+		}
+	},
+	template:`<div id="character-creation">
+					<h3>Create Your Game Profile</h3>
+					<span>Your user id is {{ userId }} (that is a lucky one)</span>
+					<br>
+					<br>
+					<label for="first-name">First Name: </label>
+					<input v-model="firstName" type="text" id="first-name">
+					<br>
+					<label for="last-name">Last Name: </label>
+					<input v-model="lastName" type="text" id="last-name">
+					<br>
+					<label for="display-name">Display Name:</label>
+					<input v-model="displayName" type="text" id="display-name">
+					<br>
+					<button @click="createProfile">Update</button>
+				</div>
+			</div>`,
+	created: function () {
+		socket.on('userIdAssignment', (data) => {
+			this.userId = data.userId;
+		});
+	},
+	methods: {
+		createProfile: function () {
+			socket.emit('profileUpdate', {
+				firstName: this.firstName,
+				lastName: this.lastName,
+				displayName: this.displayName
+
+			});
+			console.log("emitting")
+			this.$emit('profile-created');
+		}
+    }
+};
+
+var gameComponent = {
+	data: function () {
+		return {
+			players: [],
+			assignment: [],
+			round: 0,
+			question: "",
+			currentPlayer: ""
+
+        }
+	},
+	created: function () {
+		socket.on('gameUpdate', function (data) {
+			this.assignment = data.assignment;
+			this.round = data.round;
+			this.question = data.question;
+			this.currentPlayer = data.currentPlayer;
+		});
+    }
+}
+
+var vm = new Vue({
+	el: "#app",
+	components: {
+		'profile-creation': profileCreation,
+		'room-component': roomComponent,
+		'chat-component': ChatComponent
+	},
+	data: {
+		profileComplete: false
+	},
+	methods: {
+		updateProfileComplete: function () {
+			this.profileComplete = true;
+		},
+		startGame: function () {
+			socket.emit('startGame')
         }
     }
-})
-
-socket.on('addToChat', (data) => {
-	chat.chatText += '<div>' + data.playerName + ': ' + data.msg + '</div>';
 });
-
-socket.on('evalAnswer', function (data) {
-	console.log(data);
-});
-*/

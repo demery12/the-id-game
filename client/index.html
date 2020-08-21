@@ -4,43 +4,14 @@
 		<link rel="stylesheet" href="index.css">
 	</head>
 	<body>
-		<h1>The ID Game</h1>
-		<div id="room-data" class="container">
-			<template v-if="inRoom">
-				<span>You are in room: {{ roomId }}</span>
-				<span>Other people in this room: {{ displayMembers }}</span>
-				<chat-component v-bind:messages="messages"></chat-component>
-			</template>
-			<template v-else>
-				<div class="join-room">
-					<label for="join-room">Join an existing room</label>
-					<input type="text" id="join-room" placeholder="Enter a room code">
-					<button onclick="joinRoom()" >Join</button>
-				</div>
-				<div class="create-room">
-					<label for="create-room">Or create a new room</label>
-					<button id="create-room" onclick="createRoom()">Create</button>
-				</div>
-			</template>
-		</div>
-		
-
-		<div class="container">
-			<div id="character-creation">
-				<h3>Create Your Game Profile</h3>
-				<span>Your user id is {{ userId }} (that is a lucky one)</span>
-				<br>
-				<br>
-				<label for="first-name">First Name: </label>
-				<input v-model="firstName" type="text" id="first-name">
-				<br>
-				<label for="last-name">Last Name: </label>
-				<input v-model="lastName" type="text" id="last-name">
-				<br>
-				<label for="display-name">Display Name:</label>
-				<input v-model="displayName" type="text" id="display-name">
-				<br>
-				<button onclick="updateProfile()">Update</button>
+		<div id="app">
+			<h1>The ID Game</h1>
+			<div v-if="!profileComplete" class="container">
+				<profile-creation v-on:profile-created="updateProfileComplete"></profile-creation>
+			</div>
+			<div v-else id="room-data" class="container">
+				<room-component></room-component>
+				<button @click="startGame">Start Game</button>
 			</div>
 		</div>
 		<script src="/socket.io/socket.io.js"></script>
