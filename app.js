@@ -101,13 +101,18 @@ io.sockets.on('connection', function (socket) {
     });
 
     socket.on('startGame', function () {
+        console.log("The game is starting");
         const room = ROOMS[player.roomId];
-        room.gameStarted = true;
-        room.assignIds();
+        room.startGame();
     });
 
     socket.on('nextPlayer', function () {
-
+        const room = ROOMS[player.roomId];
+        room.game.nextPlayer();
+        console.log(room.game.gameOver)
+        if (room.game.gameOver) {
+            socket.emit('gameOver');
+        }
     });
 });
 
@@ -134,12 +139,23 @@ setInterval(function () {
             const members = room.getMembers();
             const messages = room.getMessages();
             if (room.gameStarted) {
-                const assignments = room.assignments;
-                const playerAssignment = assignments[playerId];
-                socket.emit('gameUpdate', { roomId, members, messages, playerAssignment })
-            } else {
-                socket.emit("update", { roomId, members, messages })
+                const game = room.game;
+                const assignmentIds = game.getAssignmentByPlayerId(playerId);
+                const assignment = assignmentIds.map(p => PLAYERS[p].getFormattedName())
+                const question = game.getQuestion();
+                const round = game.getRound();
+                const currentPlayer = game.getCurrentPlayer();
+                const isCurrentPlayer = currentPlayer.playerId == playerId;
+
+                socket.emit('gameUpdate', {
+                    assignment,
+                    question,
+                    round,
+                    currentPlayer,
+                    isCurrentPlayer
+                });
             }
+            socket.emit("update", { roomId, members, messages })
         }
     }
 }, 1000);

@@ -11,6 +11,10 @@ class Player {
     inRoom() {
         return this.roomId
     }
+
+    getFormattedName() {
+        return `${this.firstName} ${this.lastName}`
+    }
 }
 
 module.exports = Player;

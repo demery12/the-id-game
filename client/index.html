@@ -10,9 +10,9 @@
 				<profile-creation v-on:profile-created="updateProfileComplete"></profile-creation>
 			</div>
 			<div v-else id="room-data" class="container">
-				<room-component></room-component>
-				<button @click="startGame">Start Game</button>
+				<room-component v-on:start-game="startGame"></room-component>
 			</div>
+			<game-component v-if="gameStarted"></game-component>
 		</div>
 		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="index.js"></script>

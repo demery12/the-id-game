@@ -11,6 +11,7 @@ var ChatComponent = {
 	},
 	props: ['messages', 'roomId'],
 	template: `<div id="chat-container" class = "container">
+				<h2>Chat:</h2>
 				<div id="chat-text" style="width:500px; height:100px; overflow-y:scroll" >
 					<div v-for="message in messages" :key="message.id">{{message.sender}}: {{ message.text }}</div>
 			    </div >
@@ -67,6 +68,7 @@ var roomComponent = {
 					<span>You are in room: {{ roomId }}</span>
 					<span>Other people in this room: {{ displayMembers }}</span>
 					<chat-component v-bind:messages="messages" v-bind:roomId="roomId"></chat-component>
+					<button @click="startGame">Start Game</button>
 				</template>
 				<template v-else>
 					<div class="join-room">
@@ -110,7 +112,10 @@ var roomComponent = {
 		},
 		createRoom: function() {
 			socket.emit('createRoom');
-		}
+		},
+		startGame: function () {
+			this.$emit('start-game')
+        }
     }
 };
 
@@ -153,7 +158,6 @@ var profileCreation = {
 				displayName: this.displayName
 
 			});
-			console.log("emitting")
 			this.$emit('profile-created');
 		}
     }
@@ -165,19 +169,42 @@ var gameComponent = {
 			players: [],
 			assignment: [],
 			round: 0,
-			question: "",
-			currentPlayer: ""
+			question: "Blah",
+			currentPlayer: "",
+			isCurrentPlayer: false,
+			gameOver: false
 
         }
 	},
 	created: function () {
-		socket.on('gameUpdate', function (data) {
+		socket.on('gameUpdate', (data) => {
+			this.gameUpdate(data);	
+		});
+
+		socket.on('gameOver', () => {
+			this.gameOver = true;
+		});
+	},
+	methods: {
+		gameUpdate: function (data) {
 			this.assignment = data.assignment;
 			this.round = data.round;
 			this.question = data.question;
 			this.currentPlayer = data.currentPlayer;
-		});
-    }
+			this.isCurrentPlayer = data.isCurrentPlayer;
+		},
+		nextPlayer: function () {
+			socket.emit('nextPlayer');
+        }
+    },
+	template: `<div>
+				<h4>Round {{ round }}</h4>
+				<h4>Your assignments are {{ assignment[0] }} and {{ assignment[1] }}</h4>
+				<h3>{{ question }}</h3>
+				<h4>{{ currentPlayer.displayName }}, you are up!</h4>
+				<button v-if="isCurrentPlayer && !gameOver" @click="nextPlayer">Done Speaking</button>
+				<div v-if="gameOver">Discuss your guesses</div> 
+			   </div>`
 }
 
 var vm = new Vue({
@@ -185,10 +212,12 @@ var vm = new Vue({
 	components: {
 		'profile-creation': profileCreation,
 		'room-component': roomComponent,
-		'chat-component': ChatComponent
+		'chat-component': ChatComponent,
+		'game-component': gameComponent
 	},
 	data: {
-		profileComplete: false
+		profileComplete: false,
+		gameStarted: false
 	},
 	methods: {
 		updateProfileComplete: function () {
@@ -196,6 +225,10 @@ var vm = new Vue({
 		},
 		startGame: function () {
 			socket.emit('startGame')
+			this.gameStarted = true;
         }
+	},
+	created: function () {
+		socket.on('gameUpdate', () => this.gameStarted = true);
     }
 });

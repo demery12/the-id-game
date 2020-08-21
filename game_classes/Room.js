@@ -1,27 +1,31 @@
+const Members = require('./Members');
+const Game = require('./Game');
+
 class Room {
     constructor() {
         this.roomId = Math.random();
-        this.members = {};
+        this.members = new Members();
         this.messages = [];
         this.message_counter = 0;
         this.gameStarted = false;
+        this.game = null;
         this.assignments = null;
     }
 
     addMember(player) {
-        this.members[player.playerId] = player;
+        this.members.addMember(player);
     }
 
     getMembers() {
-        return Object.values(this.members);
+        return this.members.getMembers();
     }
 
     getMemberIds() {
-        return Object.keys(this.members);
+        return this.members.getMemberIds();
     }
 
     removeMember(player) {
-        delete this.members[player.playerId];
+        this.members.removeMember(player.playerId);
     }
 
     addMessage(sender, message) {
@@ -38,25 +42,12 @@ class Room {
         return this.messages;
     }
 
-    assignIds() {
-        const players = this.getMemberIds();
-        players.push(...players);
-        const assignments = {};
-        for (const memberId of this.getMemberIds()) {
-            assignments[memberId] = [];
-        }
-        for (const player of Object.keys(assignments)) {
-            let newAssignmentIndex = Math.floor(Math.random() * players.length);
-            let newAssignment = players[newAssignmentIndex];
-            assignments[player].push(newAssignment);
-            players.splice(newAssignmentIndex, 1);
+    startGame() {
+        this.game = new Game(this.roomId, this.members);
+        this.game.assignIds();
+        this.game.nextPlayer();
+        this.gameStarted = true;
 
-            newAssignmentIndex = Math.floor(Math.random() * players.length);
-            newAssignment = players[newAssignmentIndex];
-            assignments[player].push(newAssignment);
-            players.splice(newAssignmentIndex, 1);
-        } 
-        this.assignments = assignments;
     }
 }
 
