@@ -1,7 +1,9 @@
-* working on the actual game portion of it
-	* who manages the assignments? A new game object?
-	* who manages the round?
-	* currently the game component is expecting more data from gameUpdate than is being provided
-* chat update should happen regardless of whether game update happens
 * once a game starts the players should be solidified and NOT removed from everything if they dc
 	* a player should be able to rejoin after DC if they save their playerId
+* there are TONS of ways to crash the server
+	* we should check to make sure all profile info is filled out
+	* we should actually handle joining a room that doesn't exist
+	* solidifying the player on game start should fix the problem where a dc breaks the game
+* Issue with the game ending
+* better testing 
+* publish on heroku
