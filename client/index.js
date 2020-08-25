@@ -54,6 +54,7 @@ var roomComponent = {
 	components: {
 		'chat-component': ChatComponent
 	},
+	props: ['gameStarted'],
 	data: function () {
 		return {
 			inRoom: false,
@@ -65,10 +66,10 @@ var roomComponent = {
 	},
 	template:`<div id="room-data" class="container">
 				<template v-if="inRoom">
-					<span>You are in room: {{ roomId }}</span>
+					<span>You are in room: <span id="room-id">{{ roomId }}</span></span>
 					<span>Other people in this room: {{ displayMembers }}</span>
 					<chat-component v-bind:messages="messages" v-bind:roomId="roomId"></chat-component>
-					<button @click="startGame">Start Game</button>
+					<button v-if="!gameStarted" @click="startGame">Start Game</button>
 				</template>
 				<template v-else>
 					<div class="join-room">
@@ -99,8 +100,7 @@ var roomComponent = {
 	},
 	methods: {
 		joinRoom: function () {
-			const roomId = document.getElementById("join-room").value;
-			console.log(roomId);
+			const roomId = document.getElementById("join-room").value.trim();
 			socket.emit('joinRoom', { roomId });
 		},
 		joinedRoom: function(data) {
@@ -125,24 +125,31 @@ var profileCreation = {
 			userId: 0,
 			firstName: "",
 			lastName: "",
-			displayName: ""
+			displayName: "",
+			errors: []
 		}
 	},
 	template:`<div id="character-creation">
 					<h3>Create Your Game Profile</h3>
 					<span>Your user id is {{ userId }} (that is a lucky one)</span>
 					<br>
+					  <p v-if="errors.length">
+						<b>Please fill in the missing fields:</b>
+						<ul>
+						  <li v-for="error in errors">{{ error }}</li>
+						</ul>
+					  </p>
 					<br>
 					<label for="first-name">First Name: </label>
-					<input v-model="firstName" type="text" id="first-name">
+					<input v-model.trim="firstName" type="text" id="first-name">
 					<br>
 					<label for="last-name">Last Name: </label>
-					<input v-model="lastName" type="text" id="last-name">
+					<input v-model.trim="lastName" type="text" id="last-name">
 					<br>
 					<label for="display-name">Display Name:</label>
-					<input v-model="displayName" type="text" id="display-name">
+					<input v-model.trim="displayName" type="text" id="display-name">
 					<br>
-					<button @click="createProfile">Update</button>
+					<button @click="createProfile" id="update-profile">Update</button>
 				</div>
 			</div>`,
 	created: function () {
@@ -152,13 +159,27 @@ var profileCreation = {
 	},
 	methods: {
 		createProfile: function () {
-			socket.emit('profileUpdate', {
-				firstName: this.firstName,
-				lastName: this.lastName,
-				displayName: this.displayName
+			this.errors = [];
+			if (this.firstName == "") {
+				this.errors.push("First name is required");
+			}
 
-			});
-			this.$emit('profile-created');
+			if (this.lastName == "") {
+				this.errors.push("Last name is required");
+			}
+
+			if (this.displayName == "") {
+				this.errors.push("Display name is required");
+			}
+			if (this.errors.length === 0) {
+				socket.emit('profileUpdate', {
+					firstName: this.firstName,
+					lastName: this.lastName,
+					displayName: this.displayName
+
+				});
+				this.$emit('profile-created');
+            }
 		}
     }
 };
@@ -169,7 +190,7 @@ var gameComponent = {
 			players: [],
 			assignment: [],
 			round: 0,
-			question: "Blah",
+			question: "",
 			currentPlayer: "",
 			isCurrentPlayer: false,
 			gameOver: false
@@ -198,10 +219,10 @@ var gameComponent = {
         }
     },
 	template: `<div>
-				<h4>Round {{ round }}</h4>
+				<h4 v-if="!gameOver">Round {{ round }}</h4>
 				<h4>Your assignments are {{ assignment[0] }} and {{ assignment[1] }}</h4>
 				<h3>{{ question }}</h3>
-				<h4>{{ currentPlayer.displayName }}, you are up!</h4>
+				<h4 v-if="!gameOver">{{ currentPlayer.displayName }}, you are up!</h4>
 				<button v-if="isCurrentPlayer && !gameOver" @click="nextPlayer">Done Speaking</button>
 				<div v-if="gameOver">Discuss your guesses</div> 
 			   </div>`

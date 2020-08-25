@@ -111,7 +111,7 @@ io.sockets.on('connection', function (socket) {
         room.game.nextPlayer();
         console.log(room.game.gameOver)
         if (room.game.gameOver) {
-            socket.emit('gameOver');
+            sendToRoom(player.roomId, 'gameOver', {})
         }
     });
 });

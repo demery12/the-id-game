@@ -10,7 +10,7 @@
 				<profile-creation v-on:profile-created="updateProfileComplete"></profile-creation>
 			</div>
 			<div v-else id="room-data" class="container">
-				<room-component v-on:start-game="startGame"></room-component>
+				<room-component v-bind:game-started="gameStarted" v-on:start-game="startGame"></room-component>
 			</div>
 			<game-component v-if="gameStarted"></game-component>
 		</div>
