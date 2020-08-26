@@ -1,8 +1,3 @@
-* once a game starts the players should be solidified and NOT removed from everything if they dc
-	* a player should be able to rejoin after DC if they save their playerId
-* there are TONS of ways to crash the server
-	* we should actually handle joining a room that doesn't exist
-	* solidifying the player on game start should fix the problem where a dc breaks the game
-* Issue with the game ending
+* a player should be able to rejoin after DC if they save their playerId
 * better testing 
 * publish on heroku

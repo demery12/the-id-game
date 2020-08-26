@@ -7,7 +7,6 @@ app.get('/', function (req, res) {
     res.sendFile(__dirname + '/client/index.html')
 });
 app.use(express.static('client'));
-console.log(__dirname);
 serv.listen(2000);
 console.log("Server started.");
 
@@ -39,14 +38,12 @@ io.sockets.on('connection', function (socket) {
         }
         delete SOCKETS[player.playerId];
         delete PLAYERS[player.playerId];
-        console.log(ROOMS);
     });
 
     /* Room must exist in ROOMS */
     function joinRoom(roomId) {
         player.roomId = roomId;
         ROOMS[roomId].addMember(player);
-        console.log(ROOMS[roomId].getMembers());
         socket.emit('roomJoined', {
             roomId,
             members: ROOMS[roomId].getMembers()
@@ -64,7 +61,8 @@ io.sockets.on('connection', function (socket) {
     // Room Joining
     socket.on('joinRoom', (data) => {
         const roomId = data.roomId;
-        if (roomId in ROOMS) {
+        if (roomId in ROOMS && !ROOMS[roomId].gameStarted) {
+            console.log(`${player.playerId} is joining ${roomId}`)
             joinRoom(roomId);
         }
         else {
@@ -82,8 +80,6 @@ io.sockets.on('connection', function (socket) {
 
     // Chat related messages
     socket.on('sendMsgToServer', (data) => {
-        console.log('Got a message');
-        console.log(data);
         const playerName = player.displayName || player.playerId;
         const msg = data.msg;
         const roomId = data.roomId;
@@ -109,7 +105,6 @@ io.sockets.on('connection', function (socket) {
     socket.on('nextPlayer', function () {
         const room = ROOMS[player.roomId];
         room.game.nextPlayer();
-        console.log(room.game.gameOver)
         if (room.game.gameOver) {
             sendToRoom(player.roomId, 'gameOver', {})
         }
@@ -123,7 +118,6 @@ function sendToRoom(roomId, emitMessage, data) {
             const socket = SOCKETS[player.playerId];
             data.members = members
             data.roomId = roomId;
-            console.log(`sending ${emitMessage}`)
             socket.emit(emitMessage, data);
         }
     }
@@ -141,7 +135,7 @@ setInterval(function () {
             if (room.gameStarted) {
                 const game = room.game;
                 const assignmentIds = game.getAssignmentByPlayerId(playerId);
-                const assignment = assignmentIds.map(p => PLAYERS[p].getFormattedName())
+                const assignment = assignmentIds.map(p => room.game.getPlayer(p).getFormattedName())
                 const question = game.getQuestion();
                 const round = game.getRound();
                 const currentPlayer = game.getCurrentPlayer();

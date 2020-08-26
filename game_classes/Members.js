@@ -15,6 +15,9 @@ class Members {
         return Object.keys(this.members);
     }
 
+    getMember(playerId) {
+        return this.members[playerId];
+    }
     removeMember(player) {
         delete this.members[player.playerId];
     }

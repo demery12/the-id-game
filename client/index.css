@@ -1,3 +1,11 @@
 input, label {
     display: block;
 }
+
+div {
+    margin: 0 auto;
+}
+
+#app {
+    width: 60%
+}

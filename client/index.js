@@ -66,10 +66,12 @@ var roomComponent = {
 	},
 	template:`<div id="room-data" class="container">
 				<template v-if="inRoom">
-					<span>You are in room: <span id="room-id">{{ roomId }}</span></span>
+					<span>You are in room: <span id="room-id">{{ roomId }}</span></span>					
 					<span>Other people in this room: {{ displayMembers }}</span>
+					<div style="text-align:center;">					
+						<button v-if="!gameStarted" @click="startGame">Start Game</button>
+					</div>
 					<chat-component v-bind:messages="messages" v-bind:roomId="roomId"></chat-component>
-					<button v-if="!gameStarted" @click="startGame">Start Game</button>
 				</template>
 				<template v-else>
 					<div class="join-room">
@@ -221,10 +223,10 @@ var gameComponent = {
 	template: `<div>
 				<h4 v-if="!gameOver">Round {{ round }}</h4>
 				<h4>Your assignments are {{ assignment[0] }} and {{ assignment[1] }}</h4>
-				<h3>{{ question }}</h3>
+				<h3 v-if="!gameOver">Question: {{ question }}</h3>
 				<h4 v-if="!gameOver">{{ currentPlayer.displayName }}, you are up!</h4>
 				<button v-if="isCurrentPlayer && !gameOver" @click="nextPlayer">Done Speaking</button>
-				<div v-if="gameOver">Discuss your guesses</div> 
+				<h3 v-if="gameOver">Discuss your guesses!</h3> 
 			   </div>`
 }
 

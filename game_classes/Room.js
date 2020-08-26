@@ -25,7 +25,7 @@ class Room {
     }
 
     removeMember(player) {
-        this.members.removeMember(player.playerId);
+        this.members.removeMember(player);
     }
 
     addMessage(sender, message) {

@@ -2,6 +2,10 @@ class Game {
     constructor(roomId, members) {
         this.roomId = roomId;
         this.members = members;
+        this.playersAtStart = {};
+        for (const member of members.getMembers()) {
+            this.playersAtStart[member.playerId] = member;
+        }
         this.gameStarted = false;
         this.assignments = null;
         this.currentPlayer = null;
@@ -41,6 +45,9 @@ class Game {
         return this.currentPlayer
     }
 
+    getPlayer(playerId) {
+        return this.playersAtStart[playerId]
+    }
     assignIds() {
         const players = this.members.getMemberIds();
         players.push(...players);
